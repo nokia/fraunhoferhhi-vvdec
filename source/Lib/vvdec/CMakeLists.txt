@@ -17,6 +17,7 @@ file( GLOB BASE_SRC_FILES CONFIGURE_DEPENDS "*.cpp"  "../CommonLib/*.cpp"  "../U
 # get include files
 file( GLOB BASE_INC_FILES CONFIGURE_DEPENDS "*.h" "../CommonLib/*.h"  "../Utilities/*.h" "../DecoderLib/*.h" )
 
+option(VVDEC_ENABLE_NN_POSTFILTER "Enable neural network postfilter" ON)
 
 if( NOT DEFINED VVDEC_ENABLE_X86_SIMD )
   message( FATAL_ERROR "VVDEC_ENABLE_X86_SIMD is not defined. Please include TopLevel CMakeLists.txt file of vvdec to set all dependencies!" )
@@ -52,14 +53,18 @@ file( GLOB FGS_X86_AVX2_SRC_FILES  CONFIGURE_DEPENDS "../FilmGrain/*_avx2.cpp"  
 list( APPEND X86_SSE41_SRC_FILES ${FGS_X86_SSE41_SRC_FILES} )
 list( APPEND X86_AVX2_SRC_FILES  ${FGS_X86_AVX2_SRC_FILES}  )
 
+# NNPF source files
+file( GLOB NNPF_SRC_FILES "../NNPF/n*.cpp" )
+file( GLOB NNPF_INC_FILES "../NNPF/*.h" )
+
 # get public/extern include files
 file( GLOB PUBLIC_INC_FILES  CONFIGURE_DEPENDS "../../../include/${LIB_NAME}/*.h" )
 
 # get all private include files
-set( PRIVATE_INC_FILES ${BASE_INC_FILES} ${X86_INC_FILES} ${ARM_INC_FILES} ${MD5_INC_FILES} ${FGS_INC_FILES} )
+set( PRIVATE_INC_FILES ${BASE_INC_FILES} ${X86_INC_FILES} ${ARM_INC_FILES} ${MD5_INC_FILES} ${FGS_INC_FILES} ${NNPF_INC_FILES} )
 
 # get all source files
-set( SRC_FILES ${BASE_SRC_FILES} ${X86_SRC_FILES} ${ARM_SRC_FILES} ${MD5_SRC_FILES} ${FGS_SRC_FILES} )
+set( SRC_FILES ${BASE_SRC_FILES} ${X86_SRC_FILES} ${ARM_SRC_FILES} ${MD5_SRC_FILES} ${FGS_SRC_FILES} ${NNPF_SRC_FILES} )
 set( INC_FILES ${PRIVATE_INC_FILES} ${PUBLIC_INC_FILES} )
 
 # NATVIS files for Visual Studio
@@ -76,10 +81,25 @@ source_group( "Header Files\\private" FILES ${PRIVATE_INC_FILES} )
 # set PRIVATE defines for all targets in this directory
 add_compile_definitions( ${LIB_NAME_UC}_SOURCE )
 
+# Find OpenVINO package if neural network postfilter is enabled
+if(VVDEC_ENABLE_NN_POSTFILTER)
+    find_package(OpenVINO REQUIRED COMPONENTS Runtime)
+    if(OpenVINO_FOUND)
+        message(STATUS "OpenVINO found: ${OpenVINO_VERSION}")
+        set(NN_INCLUDE_DIRS ${OpenVINO_INCLUDE_DIRS})
+        set(NN_LIBRARIES openvino::runtime)
+    endif()
+endif()
+
 # set PRIVATE include directories for all targets in this directory
 include_directories( $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> )
 include_directories( . .. ../DecoderLib ../CommonLib ../CommonLib/x86 ../CommonLib/arm ../libmd5 )
 include_directories( SYSTEM ../../../thirdparty )
+
+# Add neural network include directories if enabled
+if(VVDEC_ENABLE_NN_POSTFILTER AND NN_INCLUDE_DIRS)
+    include_directories(SYSTEM ${NN_INCLUDE_DIRS})
+endif()
 
 # don't export all symbols from shared libraries by default (gcc: -fvisibility=hidden), only those marked as VVDEC_DECL
 #  behavior similar to __declspec(dllexport) on windows
@@ -165,6 +185,11 @@ target_compile_definitions( ${LIB_NAME} PUBLIC $<$<STREQUAL:$<TARGET_PROPERTY:${
 target_include_directories( ${LIB_NAME} SYSTEM INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> )
 
 target_link_libraries( ${LIB_NAME} ${INTEL_ITT_LINK_TARGET} Threads::Threads )
+
+# Link neural network libraries if enabled
+if(VVDEC_ENABLE_NN_POSTFILTER AND NN_LIBRARIES)
+    target_link_libraries( ${LIB_NAME} ${NN_LIBRARIES} )
+endif()
 
 set_target_properties( ${LIB_NAME} PROPERTIES
                                    SOVERSION ${PROJECT_VERSION_MAJOR}

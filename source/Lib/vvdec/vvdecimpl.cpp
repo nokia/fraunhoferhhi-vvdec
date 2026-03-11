@@ -41,6 +41,7 @@ POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------------------- */
 
 #include <string>
+#include <fstream>
 
 #if defined( __linux__ )
 #include <malloc.h>
@@ -132,6 +133,15 @@ int VVDecImpl::init( const vvdecParams& params, vvdecCreateBufferCallback create
 
     // initialize decoder class
     m_cDecLib->setDecodedPictureHashSEIEnabled( (int) params.verifyPictureHash );
+
+#ifndef NDEBUG
+    static std::ofstream seiMessageFileStream("sei_parsing_log.txt", std::ofstream::out);
+    if (seiMessageFileStream.is_open())
+    {
+      m_cDecLib->setDecodedSEIMessageOutputStream(&seiMessageFileStream);
+    }
+#endif
+
 //    if (!m_outputDecodedSEIMessagesFilename.empty())
 //    {
 //      std::ostream &os=m_seiMessageFileStream.is_open() ? m_seiMessageFileStream : std::cout;
@@ -935,7 +945,7 @@ int VVDecImpl::xAddPicture( Picture* pcPic )
   int confTop    = conf.getWindowTopOffset()    * SPS::getWinUnitY(pcPic->cs->sps->getChromaFormatIdc())  + defDisp.getWindowTopOffset();
   int confBottom = conf.getWindowBottomOffset() * SPS::getWinUnitY(pcPic->cs->sps->getChromaFormatIdc())  + defDisp.getWindowBottomOffset();
 
-  const CPelUnitBuf& cPicBuf = pcPic->getRecoBuf();
+  const CPelUnitBuf& cPicBuf = pcPic->getIsFiltered() ? pcPic->getBuf(PIC_FILTERED) : pcPic->getRecoBuf();
 
   const uint32_t uiWidth  = cPicBuf.Y().width - confLeft - confRight;
   const uint32_t uiHeight = cPicBuf.Y().height - confTop - confBottom;

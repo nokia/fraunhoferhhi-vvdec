@@ -52,6 +52,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <utility>
 
+#include "NNPF/nnpf.h"
+
 namespace vvdec
 {
 template<class TArr, class TElem = decltype( std::declval<TArr>()[0] )>

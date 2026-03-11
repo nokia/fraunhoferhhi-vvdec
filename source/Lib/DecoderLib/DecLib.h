@@ -49,6 +49,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "PicListManager.h"
 #include "DecLibParser.h"
 #include "DecLibRecon.h"
+#include "NNPFLibWrapper.h"
 
 #include "CommonLib/CommonDef.h"
 #include "CommonLib/Picture.h"
@@ -83,6 +84,7 @@ class DecLib
   std::vector<NalUnitType> m_pictureUnitNals;
   std::list<InputNALUnit>  m_pictureSeiNalus;
 
+
 public:
   DecLib();
   ~DecLib() = default;
@@ -112,6 +114,9 @@ public:
 
   ThreadPool& getThreadPool() { return *m_decodeThreadPool; }
 
+  NnpfLibWrapper m_nnpfLibWrapper;
+
+
 private:
   void     reconPicture( Picture* pcPic );
 #if JVET_R0270
@@ -122,6 +127,7 @@ private:
   Picture* getNextOutputPic ( bool bFlush = false );
   void     blockAndFinishPictures( Picture* pcPic = nullptr );   // iterate over DecLibRecon instances and wait to finish picture(s)
   void     xCheckNalUnitConstraintFlags( const ConstraintInfo *cInfo, uint32_t naluType );
+
 };
 
 }

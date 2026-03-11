@@ -73,6 +73,9 @@ typedef enum
   VVDEC_ALTERNATIVE_TRANSFER_CHARACTERISTICS = 147,
   VVDEC_AMBIENT_VIEWING_ENVIRONMENT          = 148,
   VVDEC_CONTENT_COLOUR_VOLUME                = 149,
+  VVDEC_NEURAL_NETWORK_POST_FILTER_CHARACTERISTICS = 210,
+  VVDEC_NEURAL_NETWORK_POST_FILTER_ACTIVATION      = 211,
+    
   VVDEC_SEI_UNKNOWN                          = -1,
 }vvdecSEIPayloadType;
 
@@ -449,5 +452,152 @@ typedef struct vvdecSEIContentColourVolume
   uint32_t    ccvMaxLuminanceValue;
   uint32_t    ccvAvgLuminanceValue;
 }vvdecSEIContentColourVolume;
+
+/**
+ * \brief SEI message containing characteristics of a neural network post-filter.
+ *
+ * This message specifies the properties and configuration of a neural network
+ * that can be used as a post-processing filter on the decoded video.
+ * It can define a new filter or update an existing one.
+ */
+typedef struct vvdecSEINeuralNetworkPostFilterCharacteristics
+{
+  // --- NNPFC Top-Level Information ---
+  uint16_t m_purpose;                                    ///< (nnpfc_purpose) u(16): A bitmask indicating the intended use(s) of the filter (e.g., super-resolution, denoising, etc.).
+  uint32_t m_id;                                         ///< (nnpfc_id) ue(v): Unique identifier for the post-processing filter.
+  bool     m_baseFlag;                                   ///< (nnpfc_base_flag) u(1): 1 indicates this is a base filter definition. 0 indicates an update to an existing filter.
+  uint32_t m_modeIdc;                                    ///< (nnpfc_mode_idc) ue(v): Specifies how the filter is defined (e.g., via URI or embedded payload).
+  char*    m_uri;                                        ///< (nnpfc_uri) st(v): URI pointing to the neural network definition if m_modeIdc is 1.
+  char*    m_tagUri;                                     ///< (nnpfc_tag_uri) st(v): URI identifying the format of the data at m_uri.
+  // Presence flags for optional top-level fields
+  bool     m_uriParsedFlag;                              ///< Parser-only (internal): true if `m_uri` was parsed from the bitstream; not part of the SEI spec and not emitted in JSON
+  bool     m_tagUriParsedFlag;                           ///< Parser-only (internal): true if `m_tagUri` was parsed from the bitstream; not part of the SEI spec and not emitted in JSON
+  
+  
+  // --- Property Flag and Conditional Block ---
+  bool     m_propertyPresentFlag;                        ///< (nnpfc_property_present_flag) u(1): If 1, formatting, purpose, and complexity info are present.
+
+  // --- Input and Output Formatting Properties (Present if m_propertyPresentFlag is true) ---
+  uint32_t m_numInputPicsMinus1;                         ///< (nnpfc_num_input_pics_minus1) ue(v): Specifies the number of decoded pictures used as input to the filter (Value is N-1).
+  bool*    m_inputPicFilteringFlag;                      ///< (nnpfc_input_pic_filtering_flag[i]) u(1): Array of flags. 1 indicates the i-th input picture is filtered.
+  // Presence flags for property sub-fields
+  bool     m_numInputPicsMinus1ParsedFlag;               ///< Parser-only (internal): true if `m_numInputPicsMinus1` was parsed from the bitstream
+  bool     m_inputPicFilteringParsedFlag;                ///< Parser-only (internal): true if `m_inputPicFilteringFlag` array was allocated and parsed
+  bool     m_absentInputPicZeroParsedFlag;               ///< Parser-only (internal): true if `m_absentInputPicZeroFlag` was parsed from the bitstream
+  
+  bool     m_absentInputPicZeroFlag;                     ///< (nnpfc_absent_input_pic_zero_flag) u(1): Specifies how to handle input pictures not present in the bitstream.
+  
+  // --- Purpose-Dependent Formatting ---
+  bool     m_outSubCFlag;                                ///< (nnpfc_out_sub_c_flag) u(1): Specifies chroma subsampling for the output (present for chroma upsampling purpose).
+  uint32_t m_outColourFormatIdc;                         ///< (nnpfc_out_colour_format_idc) u(2): Specifies output color format (present for colourization purpose).
+  uint32_t m_picWidthNumMinus1;                          ///< (nnpfc_pic_width_num_minus1) ue(v): Numerator for output picture width resampling ratio.
+  uint32_t m_picWidthDenomMinus1;                        ///< (nnpfc_pic_width_denom_minus1) ue(v): Denominator for output picture width resampling ratio.
+  uint32_t m_picHeightNumMinus1;                         ///< (nnpfc_pic_height_num_minus1) ue(v): Numerator for output picture height resampling ratio.
+  uint32_t m_picHeightDenomMinus1;                       ///< (nnpfc_pic_height_denom_minus1) ue(v): Denominator for output picture height resampling ratio.
+  uint32_t* m_interpolatedPics;                          ///< (nnpfc_interpolated_pics[i]) ue(v): Number of pictures to interpolate between input pictures.
+  // Presence flags for purpose-dependent fields
+  bool     m_outSubCParsedFlag;                          ///< Parser-only (internal): true if `m_outSubCFlag` was parsed from the bitstream
+  bool     m_outColourFormatIdcParsedFlag;               ///< Parser-only (internal): true if `m_outColourFormatIdc` was parsed from the bitstream
+  bool     m_resolutionResamplingParsedFlag;             ///< Parser-only (internal): true if resolution resampling fields were parsed
+  bool     m_interpolatedPicsParsedFlag;                 ///< Parser-only (internal): true if `m_interpolatedPics` array was allocated and parsed
+  
+  
+  // --- Tensor and Color Formatting ---
+  bool     m_componentLastFlag;                          ///< (nnpfc_component_last_flag) u(1): Specifies tensor dimension order (e.g., CHW vs HWC).
+  uint32_t m_inpFormatIdc;                               ///< (nnpfc_inp_format_idc) ue(v): Specifies the data type and range of input tensor values.
+  uint32_t m_auxiliaryInpIdc;                            ///< (nnpfc_auxiliary_inp_idc) ue(v): Indicates if auxiliary input data is used.
+  uint32_t m_inpOrderIdc;                                ///< (nnpfc_inp_order_idc) ue(v): Specifies the ordering of color components in the input tensor.
+  uint32_t m_inpTensorLumaBitdepthMinus8;                ///< (nnpfc_inp_tensor_luma_bitdepth_minus8) ue(v): Bit depth of input luma samples for integer tensors (Value is D-8).
+  uint32_t m_inpTensorChromaBitdepthMinus8;              ///< (nnpfc_inp_tensor_chroma_bitdepth_minus8) ue(v): Bit depth of input chroma samples for integer tensors (Value is D-8).
+  uint32_t m_outFormatIdc;                               ///< (nnpfc_out_format_idc) ue(v): Specifies the data type and range of output tensor values.
+  uint32_t m_outOrderIdc;                                ///< (nnpfc_out_order_idc) ue(v): Specifies the ordering of color components in the output tensor.
+  uint32_t m_outTensorLumaBitdepthMinus8;                ///< (nnpfc_out_tensor_luma_bitdepth_minus8) ue(v): Bit depth of output luma samples for integer tensors (Value is D-8).
+  uint32_t m_outTensorChromaBitdepthMinus8;              ///< (nnpfc_out_tensor_chroma_bitdepth_minus8) ue(v): Bit depth of output chroma samples for integer tensors (Value is D-8).
+  // Presence flags for tensor bitdepths
+  bool     m_inpTensorLumaBitdepthParsedFlag;            ///< Parser-only (internal): true if input tensor luma bitdepth was parsed
+  bool     m_inpTensorChromaBitdepthParsedFlag;          ///< Parser-only (internal): true if input tensor chroma bitdepth was parsed
+  bool     m_outTensorLumaBitdepthParsedFlag;            ///< Parser-only (internal): true if output tensor luma bitdepth was parsed
+  bool     m_outTensorChromaBitdepthParsedFlag;          ///< Parser-only (internal): true if output tensor chroma bitdepth was parsed
+
+  // --- Separate Color Description ---
+  bool     m_separateColourDescriptionPresentFlag;       ///< (nnpfc_separate_colour_description_present_flag) u(1): If 1, custom color space info for the output is present.
+  uint8_t  m_colourPrimaries;                            ///< (nnpfc_colour_primaries) u(8): Output colour primaries.
+  uint8_t  m_transferCharacteristics;                    ///< (nnpfc_transfer_characteristics) u(8): Output transfer characteristics.
+  uint8_t  m_matrixCoeffs;                               ///< (nnpfc_matrix_coeffs) u(8): Output matrix coefficients.
+  bool     m_fullRangeFlag;                              ///< (nnpfc_full_range_flag) u(1): Output full range flag.
+  // Presence flags for colour description fields
+  bool     m_colourPrimariesParsedFlag;                  ///< Parser-only (internal): true if colour_primaries was parsed
+  bool     m_transferCharacteristicsParsedFlag;          ///< Parser-only (internal): true if transfer_characteristics was parsed
+  bool     m_matrixCoeffsParsedFlag;                     ///< Parser-only (internal): true if matrix_coeffs was parsed
+  bool     m_fullRangeFlagParsedFlag;                    ///< Parser-only (internal): true if full_range_flag was parsed
+  
+  // --- Chroma Location and Patch Information ---
+  bool     m_chromaLocInfoPresentFlag;                   ///< (nnpfc_chroma_loc_info_present_flag) u(1): If 1, chroma sample location type is present.
+  uint32_t m_chromaSampleLocTypeFrame;                   ///< (nnpfc_chroma_sample_loc_type_frame) ue(v): Specifies the location of chroma samples.
+  uint32_t m_overlap;                                    ///< (nnpfc_overlap) ue(v): Number of overlapping samples between adjacent patches.
+  bool     m_constantPatchSizeFlag;                      ///< (nnpfc_constant_patch_size_flag) u(1): If 1, the filter uses a fixed patch size.
+  uint32_t m_patchWidthMinus1;                           ///< (nnpfc_patch_width_minus1) ue(v): Horizontal size of processing patches (Value is S-1).
+  uint32_t m_patchHeightMinus1;                          ///< (nnpfc_patch_height_minus1) ue(v): Vertical size of processing patches (Value is S-1).
+  uint32_t m_extendedPatchWidthCdDeltaMinus1;            ///< (nnpfc_extended_patch_width_cd_delta_minus1) ue(v): Extended horizontal patch size for chroma.
+  uint32_t m_extendedPatchHeightCdDeltaMinus1;           ///< (nnpfc_extended_patch_height_cd_delta_minus1) ue(v): Extended vertical patch size for chroma.
+  uint32_t m_paddingType;                                ///< (nnpfc_padding_type) ue(v): Specifies the type of padding to use at picture boundaries.
+  uint32_t m_lumaPaddingVal;                             ///< (nnpfc_luma_padding_val) ue(v): Luma value for constant padding.
+  uint32_t m_cbPaddingVal;                               ///< (nnpfc_cb_padding_val) ue(v): Cb value for constant padding.
+  uint32_t m_crPaddingVal;                               ///< (nnpfc_cr_padding_val) ue(v): Cr value for constant padding.
+
+  // --- Complexity Information ---
+  bool     m_complexityInfoPresentFlag;                  ///< (nnpfc_complexity_info_present_flag) u(1): If 1, computational complexity information is present.
+  uint8_t  m_parameterTypeIdc;                           ///< (nnpfc_parameter_type_idc) u(2): Specifies how model parameters are represented (e.g., float, integer).
+  uint8_t  m_log2ParameterBitLengthMinus3;               ///< (nnpfc_log2_parameter_bit_length_minus3) u(2): Bit length of quantized parameters.
+  uint8_t  m_numParametersIdc;                           ///< (nnpfc_num_parameters_idc) u(6): Maximum number of filter parameters.
+  uint32_t m_numKmacOperationsIdc;                       ///< (nnpfc_num_kmac_operations_idc) ue(v): Maximum number of kilo multiply-accumulate operations per sample.
+  uint32_t m_totalKilobyteSize;                          ///< (nnpfc_total_kilobyte_size) ue(v): Size in kilobytes required to store uncompressed filter parameters.
+  // Presence flags for complexity info sub-fields
+  bool     m_parameterTypeIdcParsedFlag;                 ///< Parser-only (internal): true if parameter_type_idc was parsed
+  bool     m_log2ParameterBitLengthMinus3ParsedFlag;     ///< Parser-only (internal): true if log2_parameter_bit_length_minus3 was parsed
+  bool     m_numParametersIdcParsedFlag;                 ///< Parser-only (internal): true if num_parameters_idc was parsed
+  bool     m_numKmacOperationsIdcParsedFlag;            ///< Parser-only (internal): true if num_kmac_operations_idc was parsed
+  bool     m_totalKilobyteSizeParsedFlag;                ///< Parser-only (internal): true if total_kilobyte_size was parsed
+
+  // --- Metadata and Payload ---
+  uint32_t m_numMetadataExtensionBits;                   ///< (nnpfc_num_metadata_extension_bits) ue(v): Number of bits for metadata extension.
+  uint8_t* m_reservedMetadataExtension;                  ///< (nnpfc_reserved_metadata_extension) u(v): Reserved bits for future metadata.
+  uint8_t* m_payload;                                    ///< (nnpfc_payload_byte) b(8): Raw payload containing the filter definition if not specified by URI.
+  uint32_t m_payloadSize;                                ///< Size of the raw payload in bytes.
+  // Presence flags for metadata/payload
+  bool     m_reservedMetadataExtensionParsedFlag;        ///< Parser-only (internal): true if reserved metadata extension bits were parsed
+  bool     m_payloadParsedFlag;                          ///< Parser-only (internal): true if `m_payload` and `m_payloadSize` were parsed
+  
+  // --- Derived Flags (not parsed from bitstream) ---
+  bool m_purposeChromaUpsampling;
+  bool m_purposeColourization;
+  bool m_purposeResolutionResampling;
+  bool m_purposePictureRateUpsampling;
+
+} vvdecSEINeuralNetworkPostFilterCharacteristics;
+
+/**
+ * \brief SEI message providing activation instructions for a neural network post-filter.
+ *
+ * This message is used to activate, deactivate, or control the persistence of a
+ * neural network post-filter that has been previously defined by a
+ * vvdecSEINeuralNetworkPostFilterCharacteristics message. It links to a specific
+ * filter definition via its ID.
+ */
+typedef struct vvdecSEINeuralNetworkPostFilterActivation
+{
+  bool     m_present;            ///< Indicates if the SEI message is present in the current access unit.
+  uint32_t m_id;                 ///< (nnpfa_target_id) The ID of the NNPF characteristics message that defines the filter to be activated/deactivated.
+  bool     m_cancelFlag;         ///< (nnpfa_cancel_flag) A value of 1 cancels the persistence of the filter, deactivating it for subsequent pictures unless re-activated.
+  bool     m_persistenceFlag;    ///< (nnpfa_persistence_flag) A value of 1 specifies that the filter activation persists across pictures until explicitly cancelled or a new CLVS begins.
+  bool     m_targetBaseFlag;     ///< (nnpfa_target_base_flag) When 1, indicates that the target filter is a base version. When 0, it's an updated version.
+  bool     m_noPrevClvsFlag;     ///< (nnpfa_no_prev_clvs_flag) When 1, indicates the filter should not be applied to pictures from a previous CLVS that are used as reference.
+  bool     m_noFollClvsFlag;     ///< (nnpfa_no_foll_clvs_flag) When 1, indicates the filter should not be applied to pictures from a following CLVS that are used for temporal processing.
+  uint32_t m_numOutputEntries;   ///< (nnpfa_num_output_entries) Specifies the number of output entries. This value determines the size of the m_outputFlag array.
+  bool*    m_outputFlag;         ///< (nnpfa_output_flag[i]) Array of flags associated with each output entry. The semantics of the flag depend on the specific filter definition.
+  // Presence flags for activation sub-fields
+  bool     m_numOutputEntriesPresentFlag;                ///< True if `m_numOutputEntries` was parsed
+  bool     m_outputFlagPresentFlag;                      ///< True if `m_outputFlag` array was present and parsed
+} vvdecSEINeuralNetworkPostFilterActivation;
 
 #endif /*VVDEC_SEI_H*/

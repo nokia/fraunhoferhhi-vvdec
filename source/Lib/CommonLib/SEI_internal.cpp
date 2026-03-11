@@ -76,6 +76,8 @@ const char *SEI_internal::getSEIMessageString( vvdecSEIPayloadType payloadType)
     case VVDEC_FRAME_FIELD_INFO:                     return "Frame field info";
     case VVDEC_SAMPLE_ASPECT_RATIO_INFO:             return "Sample aspect ratio information";
     case VVDEC_SUBPICTURE_LEVEL_INFO:                return "Subpicture level information";
+    case VVDEC_NEURAL_NETWORK_POST_FILTER_CHARACTERISTICS: return "Neural network post-filter characteristics";
+    case VVDEC_NEURAL_NETWORK_POST_FILTER_ACTIVATION: return "Neural network post-filter activation";
     default:                                        return "Unknown";
   }
 }
@@ -136,6 +138,14 @@ void SEI_internal::deleteSEIs ( seiMessages &seiList)
             free( nestedSei->payload );
           delete nestedSei;
         }
+      }
+
+      if( sei->payloadType == VVDEC_NEURAL_NETWORK_POST_FILTER_CHARACTERISTICS && sei->payload )
+      {
+        const vvdecSEINeuralNetworkPostFilterCharacteristics* nnpfcSei = ( vvdecSEINeuralNetworkPostFilterCharacteristics* ) sei->payload;
+        if( nnpfcSei->m_tagUri )  delete[] nnpfcSei->m_tagUri;
+        if( nnpfcSei->m_uri )     delete[] nnpfcSei->m_uri;
+        if( nnpfcSei->m_payload ) delete[] nnpfcSei->m_payload;
       }
 
       if( sei->payload )
@@ -218,6 +228,8 @@ int SEI_internal::getPayloadSize(vvdecSEIPayloadType payloadType)
     case VVDEC_FRAME_FIELD_INFO:                     return sizeof( vvdecSEIFrameFieldInfo );
     case VVDEC_SAMPLE_ASPECT_RATIO_INFO:             return sizeof( vvdecSEISampleAspectRatioInfo );
     case VVDEC_SUBPICTURE_LEVEL_INFO:                return sizeof( vvdecSEISubpictureLevelInfo );
+    case VVDEC_NEURAL_NETWORK_POST_FILTER_CHARACTERISTICS: return sizeof( vvdecSEINeuralNetworkPostFilterCharacteristics );
+    case VVDEC_NEURAL_NETWORK_POST_FILTER_ACTIVATION: return sizeof( vvdecSEINeuralNetworkPostFilterActivation );
     default:                                         return -1;
   }
 

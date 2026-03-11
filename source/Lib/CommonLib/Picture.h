@@ -127,7 +127,10 @@ private:
   const CPelBuf     getBuf(const CompArea &blk,      const PictureType &type) const;
          PelUnitBuf getBuf(const UnitArea &unit,     const PictureType &type);
   const CPelUnitBuf getBuf(const UnitArea &unit,     const PictureType &type) const;
-
+public:
+         PelUnitBuf getBuf(const PictureType &type)       { return m_bufs[type]; }
+  const CPelUnitBuf getBuf(const PictureType &type) const { return m_bufs[type]; }
+  
 public:
   void extendPicBorder    (                  bool top = true, bool bottom = true, bool leftrightT = true, bool leftrightB = true, ChannelType chType = MAX_NUM_CHANNEL_TYPE );
   void extendPicBorderBuf ( PelStorage& buf, bool top = true, bool bottom = true, bool leftrightT = true, bool leftrightB = true, ChannelType chType = MAX_NUM_CHANNEL_TYPE );
@@ -287,6 +290,13 @@ public:
   template <X86_VEXT vext>
   void _initPictureX86();
 #endif
+
+private:
+  bool m_isFiltered = false;
+
+public:
+  bool getIsFiltered() const { return m_isFiltered; }
+  void setIsFiltered(bool filtered) { m_isFiltered = filtered; }
 };
 
 int calcAndPrintHashStatus(const CPelUnitBuf& pic, const vvdecSEIDecodedPictureHash* pictureHashSEI, const BitDepths &bitDepths, const MsgLevel msgl);

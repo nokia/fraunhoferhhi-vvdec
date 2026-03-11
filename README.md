@@ -1,3 +1,12 @@
+# VVdeC with Neural Network Post Filtering (NNPF)
+
+This branch of VVdeC contains support for Neural Network Post Filtering (NNPF) as specified in the VSEI standard. 
+
+For full details of the NNPF functionality, please refer to [NNPF README](./nnpf/README.md).
+
+Original README content follows...v
+
+
 # VVdeC
 
 ![VVdeC Logo](https://github.com/fraunhoferhhi/vvdec/wiki/img/VVdeC_RGB_small.png)

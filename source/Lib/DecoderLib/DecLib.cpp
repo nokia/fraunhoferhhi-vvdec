@@ -54,6 +54,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "NALread.h"
 
+#include <NNPFLibWrapper.h> //Header for using the Neural Network Post Filtering library
 
 namespace vvdec
 {
@@ -309,6 +310,7 @@ Picture* DecLib::flushPic()
   return nullptr;
 }
 
+
 #if JVET_R0270
 int DecLib::finishPicture( Picture* pcPic, MsgLevel msgl, bool associatedWithNewClvs )
 #else
@@ -438,6 +440,20 @@ int DecLib::finishPicture( Picture* pcPic, MsgLevel msgl )
   }
 
   ITT_TASKEND( itt_domain_oth, itt_handle_finish );
+
+#if JVET_R0270
+  // JVET_R0270 version: Pass CLVS boundary information for enhanced filter management
+  if( pcPic )
+  {
+    m_nnpfLibWrapper.updateFilterStatesFromPic(pcPic, associatedWithNewClvs);
+  }
+#else
+  // Legacy version: Use conservative default (false) for CLVS detection
+  if( pcPic )
+  {
+    m_nnpfLibWrapper.updateFilterStatesFromPic(pcPic, false);
+  }
+#endif
 
   pcPic->progress = Picture::finished;
 
@@ -573,7 +589,14 @@ Picture* DecLib::getNextOutputPic( bool bFlush )
     maxDecPicBufferingHighestTid = activeSPS->getMaxDecPicBuffering( m_iMaxTemporalLayer );
   }
 
-  return m_picListManager.getNextOutputPic( numReorderPicsHighestTid, maxDecPicBufferingHighestTid, bFlush );
+  Picture* pic = m_picListManager.getNextOutputPic( numReorderPicsHighestTid, maxDecPicBufferingHighestTid, bFlush );
+
+  if( pic )
+  {
+    m_nnpfLibWrapper.applyFilterToPic( pic );
+  }
+
+  return pic;
 }
 
 void DecLib::reconPicture( Picture* pcPic )

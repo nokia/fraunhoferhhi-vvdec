@@ -96,6 +96,8 @@ protected:
   void xParseSEIContentLightLevelInfo         (vvdecSEI* s,    uint32_t payloadSize,                     std::ostream *pDecodedMessageOutputStream);
   void xParseSEIAmbientViewingEnvironment     (vvdecSEI* s,    uint32_t payloadSize,                     std::ostream *pDecodedMessageOutputStream);
   void xParseSEIContentColourVolume           (vvdecSEI* s,    uint32_t payloadSize,                     std::ostream *pDecodedMessageOutputStream);
+  void xParseSEINeuralNetworkPostFilterCharacteristics(vvdecSEI* sei, uint32_t payloadSize,              std::ostream *pDecodedMessageOutputStream);
+  void xParseSEINeuralNetworkPostFilterActivation(vvdecSEI* sei, uint32_t payloadSize,                   std::ostream *pDecodedMessageOutputStream);
 
   void sei_read_scode(std::ostream *pOS, uint32_t length,   int& code,         const char *pSymbolName);
   void sei_read_code (std::ostream *pOS, uint32_t uiLength, uint32_t& ruiCode, const char *pSymbolName);

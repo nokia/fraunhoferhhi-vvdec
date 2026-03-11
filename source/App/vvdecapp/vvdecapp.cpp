@@ -443,6 +443,18 @@ void printSEI( vvdecDecoder *dec, vvdecFrame *frame, std::ostream * logStream )
   {
     *logStream << "vvdecapp [detail]: SEI CONTENT_COLOUR_VOLUME" << std::endl;   
   }
+
+  sei = vvdec_find_frame_sei( dec, VVDEC_NEURAL_NETWORK_POST_FILTER_ACTIVATION, frame );
+  if( sei )
+  {
+    *logStream << "vvdecapp [detail]: SEI NEURAL_NETWORK_POST_FILTER_ACTIVATION" << std::endl;
+  }
+  
+  sei = vvdec_find_frame_sei( dec, VVDEC_NEURAL_NETWORK_POST_FILTER_CHARACTERISTICS, frame );
+  if( sei )
+  {
+    *logStream << "vvdecapp [detail]: SEI NEURAL_NETWORK_POST_FILTER_CHARACTERISTICS" << std::endl;
+  }
 }
 
 int main( int argc, char* argv[] )

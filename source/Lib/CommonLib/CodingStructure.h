@@ -64,6 +64,7 @@ enum PictureType
 {
   PIC_RECONSTRUCTION,
   PIC_RECON_WRAP,
+  PIC_FILTERED,
   NUM_PIC_TYPES
 };
 

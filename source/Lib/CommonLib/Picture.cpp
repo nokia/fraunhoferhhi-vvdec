@@ -103,6 +103,7 @@ void Picture::create(const ChromaFormat &_chromaFormat, const Size &size, const 
   UnitArea::operator=( UnitArea( _chromaFormat, Area( Position{ 0, 0 }, size ) ) );
   margin            = _margin;
   m_bufs[PIC_RECONSTRUCTION].create( _chromaFormat, size, _maxCUSize, _margin, MEMORY_ALIGN_DEF_SIZE, true, _userAllocator );
+  m_bufs[PIC_FILTERED].create( _chromaFormat, size, _maxCUSize, _margin, MEMORY_ALIGN_DEF_SIZE, true, _userAllocator );
 }
 
 void Picture::createWrapAroundBuf( const bool isWrapAround, const unsigned _maxCUSize )
@@ -137,6 +138,7 @@ void Picture::resetForUse( int _layerId )
   fieldPic                = false;
   nonReferencePictureFlag = false;
   skippedDecCount         = 0;
+  m_isFiltered            = false; // Reset filtered flag on picture reuse
 
   picCheckedDPH = false;
   subpicsCheckedDPH.clear();

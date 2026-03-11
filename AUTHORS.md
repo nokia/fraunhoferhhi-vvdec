@@ -12,3 +12,4 @@
 * Florian Eisenreich, , Fraunhofer HHI
 * Philippe de Lagrange, @delagrangep, InterDigital
 * David Maseda Neira, ,
+* John Funnell, , Nokia
