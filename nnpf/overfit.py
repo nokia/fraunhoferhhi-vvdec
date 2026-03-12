@@ -1,6 +1,13 @@
+
+"""
+ © 2026 Nokia
+Licensed under the BSD 3-Clause Clear License
+SPDX-License-Identifier: BSD-3-Clause-Clear
+"""
+
 """
 Training script to overfit multiplier layers of the PyTorch model.
-Freezes all convolutional layers and trains only the Multiplier parameters.
+Freezes all convolutional layers and trains only the multiplier parameters.
 """
 
 import click

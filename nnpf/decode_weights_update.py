@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+
+"""
+ © 2026 Nokia
+Licensed under the BSD 3-Clause Clear License
+SPDX-License-Identifier: BSD-3-Clause-Clear
+"""
+
 """
 Script to decode weight differences from a compressed bitstream
 and reconstruct the updated ONNX model.

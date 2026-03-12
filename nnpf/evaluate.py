@@ -1,4 +1,10 @@
 """
+ © 2026 Nokia
+Licensed under the BSD 3-Clause Clear License
+SPDX-License-Identifier: BSD-3-Clause-Clear
+"""
+
+"""
 Evaluation script to load a PyTorch or ONNX model and compute PSNR metrics
 against the dataset used in training.py
 Uses the FilterWithMultipliersPyTorch model class for PyTorch models,
