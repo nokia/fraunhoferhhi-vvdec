@@ -136,7 +136,7 @@ python ./evaluate.py \
 
 ## Generate a compressed weights update
 
-It is assumed that decoders that will decode our content already have a copy of the base model. So, by sending updated weights as an SEI message, we can enable decoders to reconstruct the overfitted model. To do so we need to prepare a payload for an NNPFC "Neural Network Post Filter Configuration" SEI message. This payload will contain the updated weights in a compressed format. To generate it, run:
+It is assumed that decoders that will decode our content already have a copy of the base model. So, by sending updated weights as an SEI message, we can enable decoders to reconstruct the overfitted model. To do so we need to prepare a payload for an NNPFC "Neural Network Post Filter Characteristics" SEI message. This payload will contain the updated weights in a compressed format. To generate it, run:
 
 ```
 python ./to_onnx.py \
