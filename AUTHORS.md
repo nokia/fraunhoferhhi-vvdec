@@ -12,4 +12,5 @@
 * Florian Eisenreich, , Fraunhofer HHI
 * Philippe de Lagrange, @delagrangep, InterDigital
 * David Maseda Neira, ,
+* Tamás Martinec, , Nokia/Ubikon
 * John Funnell, , Nokia
